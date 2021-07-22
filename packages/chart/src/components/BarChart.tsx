@@ -107,7 +107,7 @@ export default function BarChart({ xScale, yScale, seriesScale, xMax, yMax, getX
                     ${yAxisTooltip}<br />
                     ${xAxisTooltip}<br />
                     ${config.seriesLabel ? `${config.seriesLabel}: ${bar.key}` : ''}`
-
+                    
                     return (
                     <Group key={`bar-sub-group-${barGroup.index}-${barGroup.x0}`}>
                       <Text 
@@ -121,7 +121,7 @@ export default function BarChart({ xScale, yScale, seriesScale, xMax, yMax, getX
                       </Text>
                       <rect
                         key={`bar-group-bar-${barGroup.index}-${bar.index}-${bar.value}-${bar.key}`}
-                        x={config.runtime.horizontal ? 0 : barWidth * (barGroup.bars.length - bar.index - 1) + offset}
+                        x={config.runtime.horizontal ? xMax - bar.y - 5 : barWidth * (barGroup.bars.length - bar.index - 1) + offset}
                         y={config.runtime.horizontal ? barWidth * (barGroup.bars.length - bar.index - 1) : barY}
                         width={config.runtime.horizontal ?  bar.y : barWidth}
                         height={config.runtime.horizontal ? barWidth : barHeight}

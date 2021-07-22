@@ -15,6 +15,7 @@ import DataTransform from '@cdc/core/components/DataTransform';
 
 import PieChart from './components/PieChart';
 import LinearChart from './components/LinearChart';
+import DivergingBarChart from './components/DivergingBarChart';
 import DataTable from './components/DataTable';
 import Context from './context';
 import defaults from './data/initial-state';
@@ -392,7 +393,8 @@ export default function CdcChart(
     'Bar' : <LinearChart />,
     'Line' : <LinearChart />,
     'Combo': <LinearChart />,
-    'Pie' : <PieChart />,
+    'Pie': <PieChart />,
+    'Diverging Bar' : <DivergingBarChart />,
   }
 
   // JSX for Legend

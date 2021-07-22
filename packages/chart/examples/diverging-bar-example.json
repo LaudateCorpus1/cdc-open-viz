@@ -1,0 +1,42 @@
+{
+    "title": "Insured Rate By State",
+    "theme": "theme-brown",
+    "dataUrl":  "/examples/insured-rate-by-state-example.json",
+    "visualizationType": "Diverging Bar",
+    "visualizationSubType": "horizontal",
+    "series": [{"dataKey": "Insured Rate"}],
+    "barThickness": 0.3,
+    "height": 300,
+    "dataFormat": {
+        "commas": false,
+        "prefix": "",
+        "suffix": ""
+    },
+    "filters":[
+        {
+            "label": "Year",
+            "columnName": "Year"
+        }
+    ],
+    "padding": {
+        "left": 10,
+        "right": 10
+    },
+    "yAxis": {
+        "gridLines": false,
+        "numTicks": 3
+    },
+    "xAxis": {
+        "dataKey": "state",
+        "size": 20,
+        "wrap": true
+    },
+    "legend": {
+        "hide": true
+    },
+    "table": {
+        "label": "Insured rates by state",
+        "expanded": true,
+        "download": true
+    }
+}
