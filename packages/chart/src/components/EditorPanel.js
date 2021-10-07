@@ -373,9 +373,6 @@ const EditorPanel = () => {
                   { (config.visualizationType === "Bar" && config.visualizationSubType === "horizontal") && 
                     <Select value={config.yAxis.labelPlacement || "Below Bar"} section="yAxis" fieldName="labelPlacement" label="Label Placement" updateField={updateField} options={['Below Bar', 'On Y-Axis']} />
                   }
-                  { config.visualizationSubType === "horizontal" &&
-                    <TextField type="number" value={ config.barHeight || "25" } fieldName="barHeight" label="Bar Height" updateField={updateField} />
-                  }
                   <TextField value={config.title} fieldName="title" label="Title" updateField={updateField} />
                   <TextField type="textarea" value={config.description} fieldName="description" label="Subtext" updateField={updateField} />
                   {config.visualizationSubType !== "horizontal" &&
@@ -642,7 +639,10 @@ const EditorPanel = () => {
                       <TextField value={config.dataCutoff} type="number" fieldName="dataCutoff" className="number-narrow" label="Data Cutoff" updateField={updateField} />
                     </>
                   )}
-                  {( config.visualizationType === "Bar" || config.visualizationType === "Combo" ) && <TextField value={config.barThickness} type="number" fieldName="barThickness" label="Bar Thickness" updateField={updateField} />}
+                  {( config.visualizationType === "Bar" && config.visualizationSubType !== "horizontal" || config.visualizationType === "Combo"  && config.visualizationSubType !== "horizontal") && <TextField value={config.barThickness} type="number" fieldName="barThickness" label="Bar Thickness (%)" updateField={updateField} />}
+                  { config.visualizationSubType === "horizontal" &&
+                    <TextField type="number" value={ config.barHeight || "25" } fieldName="barHeight" label="Bar Thickness (px)" updateField={updateField} />
+                  }
                 </AccordionItemPanel>
               </AccordionItem>
               <AccordionItem>
