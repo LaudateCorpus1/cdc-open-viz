@@ -42,8 +42,6 @@ export default function CdcChart(
 
   const [data, setData] = useState<Array<Object>>([]);
 
-  const [excludedData, setExcludedData] = useState<Array<Object>>();
-
   const [filteredData, setFilteredData] = useState<Array<Object>>();
 
   const [loading, setLoading] = useState<Boolean>(true);
@@ -81,10 +79,7 @@ export default function CdcChart(
       }
     }
 
-    if(data) {
-      setData(data)
-      setExcludedData(data)
-    }
+    if(data) setData(data);
 
     let newConfig = {...defaults, ...response}
     if(undefined === newConfig.table.show) newConfig.table.show = !isDashboard
@@ -99,47 +94,6 @@ export default function CdcChart(
       }
     });
 
-    // Loop through and set initial data with exclusions - this should persist through any following data transformations (ie. filters)
-    let newExcludedData
-
-    if (newConfig.exclusions && newConfig.exclusions.active) {
-      if (newConfig.xAxis.type === 'categorical' && newConfig.exclusions.keys?.length > 0) {
-        newExcludedData = data.filter(e => !newConfig.exclusions.keys.includes(e[newConfig.xAxis.dataKey]))
-      } else if (
-        newConfig.xAxis.type === 'date' &&
-        (newConfig.exclusions.dateStart || newConfig.exclusions.dateEnd) &&
-        newConfig.xAxis.dateParseFormat
-      ) {
-
-        // Filter dates
-        const timestamp = (e) => new Date(e).getTime();
-
-        let startDate = timestamp(newConfig.exclusions.dateStart)
-        let endDate = timestamp(newConfig.exclusions.dateEnd) + 86399999 //Increase by 24h in ms (86400000ms - 1ms) to include selected end date for .getTime() comparative
-
-        let startDateValid = undefined !== typeof startDate && false === isNaN(startDate)
-        let endDateValid = undefined !== typeof endDate && false === isNaN(endDate)
-
-        if (startDateValid && endDateValid) {
-          newExcludedData = data.filter(e =>
-            (timestamp(e[newConfig.xAxis.dataKey]) >= startDate) &&
-            (timestamp(e[newConfig.xAxis.dataKey]) <= endDate)
-          )
-        } else if (startDateValid) {
-          newExcludedData = data.filter(e => timestamp(e[newConfig.xAxis.dataKey]) >= startDate)
-        } else if (endDateValid) {
-          newExcludedData = data.filter(e => timestamp(e[newConfig.xAxis.dataKey]) <= endDate)
-        }
-
-      } else {
-        newExcludedData = dataOverride || data
-      }
-    } else {
-      newExcludedData = dataOverride || data
-    }
-
-    setExcludedData(newExcludedData)
-
     // After data is grabbed, loop through and generate filter column values if there are any
     let currentData;
 
@@ -151,14 +105,15 @@ export default function CdcChart(
       });
 
       filterList.forEach((filter, index) => {
-          const filterValues = generateValuesForFilter(filter, (dataOverride || newExcludedData));
+          const filterValues = generateValuesForFilter(filter, (dataOverride || data));
 
           newConfig.filters[index].values = filterValues;
+
           // Initial filter should be active
           newConfig.filters[index].active = filterValues[0];
       });
 
-      currentData = filterData(newConfig.filters, (dataOverride || newExcludedData));
+      currentData = filterData(newConfig.filters, (dataOverride || data));
 
       setFilteredData(currentData);
     }
@@ -206,10 +161,8 @@ export default function CdcChart(
     newConfig.runtime.editorErrorMessage = newConfig.visualizationType === 'Pie' && !newConfig.yAxis.dataKey ? 'Data Key property in Y Axis section must be set for pie charts.' : '';
 
     // Check for duplicate x axis values in data
-    if(!currentData) currentData = (dataOverride || newExcludedData);
-
+    if(!currentData) currentData = (dataOverride || data);
     let uniqueXValues = {};
-
     for(let i = 0; i < currentData.length; i++) {
       if(uniqueXValues[currentData[i][newConfig.xAxis.dataKey]]){
         newConfig.runtime.editorErrorMessage = 'Duplicate keys in data. Try adding a filter.';
@@ -226,13 +179,16 @@ export default function CdcChart(
 
     data.forEach((row) => {
       let add = true;
+
       filters.forEach((filter) => {
-        if (row[filter.columnName] !== filter.active) {
+        if(row[filter.columnName] !== filter.active) {
           add = false;
         }
       });
+
       if(add) filteredData.push(row);
     });
+
     return filteredData;
   }
 
@@ -248,7 +204,7 @@ export default function CdcChart(
     });
 
     return values;
-  }
+}
 
   // Sorts data series for horizontal bar charts
   const sortData = (a, b) => {
@@ -487,7 +443,7 @@ export default function CdcChart(
     )
   }
 
-  const Filters = useCallback(() => {
+  const Filters = () => {
     const changeFilterActive = (index, value) => {
       let newFilters = config.filters;
 
@@ -495,47 +451,45 @@ export default function CdcChart(
 
       setConfig({...config, filters: newFilters});
 
-      setFilteredData(filterData(newFilters, excludedData));
+      setFilteredData(filterData(newFilters, data));
     };
 
-    const announceChange = (text) => {};
+    const announceChange = (text) => {
 
-    let filterList = '';
-    if (config.filters) {
-      
-      filterList = config.filters.map((singleFilter, index) => {
-        const values = [];
+    };
 
-        singleFilter.values.forEach((filterOption, index) => {
-          values.push(
-            <option key={index} value={filterOption}>
-              {filterOption}
-            </option>
-          );
-        });
+    let filterList = config.filters.map((singleFilter, index) => {
+      const values = [];
 
-        return (
-          <div className="single-filter" key={index}>
-            <label htmlFor={`filter-${index}`}>{singleFilter.label}</label>
-            <select
-              id={`filter-${index}`}
-              className="filter-select"
-              data-index="0"
-              value={singleFilter.active}
-              onChange={(val) => {
-                changeFilterActive(index, val.target.value);
-                announceChange(`Filter ${singleFilter.label} value has been changed to ${val.target.value}, please reference the data table to see updated values.`);
-              }}
-            >
-              {values}
-            </select>
-          </div>
-        );
+      singleFilter.values.forEach((filterOption, index) => {
+        values.push(<option
+          key={index}
+          value={filterOption}
+        >{filterOption}
+        </option>);
       });
-    }
+
+      return (
+        <div className="single-filter" key={index}>
+          <label htmlFor={`filter-${index}`}>{singleFilter.label}</label>
+          <select
+            id={`filter-${index}`}
+            className="filter-select"
+            data-index="0"
+            value={singleFilter.active}
+            onChange={(val) => {
+              changeFilterActive(index, val.target.value);
+              announceChange(`Filter ${singleFilter.label} value has been changed to ${val.target.value}, please reference the data table to see updated values.`);
+            }}
+          >
+            {values}
+          </select>
+        </div>
+      );
+    });
 
     return (<section className="filters-section">{filterList}</section>)
-  },[excludedData])
+  }
 
   const missingRequiredSections = () => {
     if (config.visualizationType === 'Pie') {
@@ -591,8 +545,7 @@ export default function CdcChart(
   const contextValues = {
     config,
     rawData: data ?? {},
-    excludedData: excludedData,
-    transformedData: filteredData || excludedData,
+    filteredData: filteredData ?? data,
     unfilteredData: data,
     seriesHighlight,
     colorScale,
